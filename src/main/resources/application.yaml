@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: demo
+  datasource:
+    url: jdbc:postgresql://localhost:5432/test
+    username: postgres
+    password: 1234
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    hibernate:
+      ddl-auto: create-drop
+  devtools:
+    restart:
+      enabled: true
+server:
+  port: 9090
+springdoc:
+  api-docs:
+    path: /api-docs
+  swagger-ui:
+    enabled: false
+  info:
+    title: API
+    version: 1.0.0
+    description: API управление банковскими картами
+token:
+  signing:
+    key: eyJpc3MiOiJDb2RleCBUZWFtIiwic3ViIjoiYXV0aCIsImV4cCI6MTUwNTQ2Nzc1Njg2OSwiaWF0IjoxNTA1NDY3MTUyMDY5LCJ1c2VyIjoxfQ
+  expiration: 1800000
