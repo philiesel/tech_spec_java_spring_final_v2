@@ -5,6 +5,7 @@ import com.example.demo.dto.UserCreateDto;
 import com.example.demo.dto.UserDto;
 import com.example.demo.dto.UserInfoDto;
 import com.example.demo.entity.UserEntity;
+import com.example.demo.mapper.UserMapper;
 import com.example.demo.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -27,10 +28,7 @@ public class UserService {
         user.setUsername(newUser.getUsername());
         UserEntity saveUser = userRepository.save(user);
         log.debug("Пользователь создан: {}", saveUser.getUsername());
-        UserCreateDto userDto = new UserCreateDto();
-        userDto.setUsername(saveUser.getUsername());
-        userDto.setId(saveUser.getId());
-        return userDto;
+        return UserMapper.INSTANCE.toDto(saveUser);
     }
 
     private UserEntity getUser(Long userId) {

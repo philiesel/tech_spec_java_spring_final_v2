@@ -1,16 +1,18 @@
 package com.example.demo.service;
 
 import com.example.demo.dto.SubscriptionDto;
-import com.example.demo.dto.UserSubscriptionDto;
+import com.example.demo.dto.UserAndSubscriptionDto;
 import com.example.demo.entity.SubscriptionEntity;
 import com.example.demo.entity.UserEntity;
 import com.example.demo.exceptions.DuplicateSubscriptionException;
 import com.example.demo.repository.SubscriptionRepository;
 import com.example.demo.repository.UserRepository;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Set;
@@ -51,39 +53,40 @@ public class SubscriptionService {
     }
 
     private UserEntity getUser(Long userId) {
-        log.info("Получение пользователя с id: {} из бд ",  String.valueOf(userId));
+        log.info("Получение пользователя с id: {} из бд ", String.valueOf(userId));
         UserEntity user = userRepository.findById(userId).orElseThrow(
-                () -> new NoSuchElementException("Пользователя с данным " + userId + " не существует"));
+                () -> new EntityNotFoundException("Пользователя с данным " + userId + " не существует"));
         return user;
     }
 
     private SubscriptionEntity getSubscription(String nameSubscription) throws NoSuchElementException {
         return subscriptionRepository.findByName(nameSubscription).orElseThrow(
-                () -> new NoSuchElementException("Подписки с данным названием " + nameSubscription + " не существует"));
+                () -> new EntityNotFoundException("Подписки с данным названием " + nameSubscription + " не существует"));
     }
 
-    @Transactional  // TODO при добавлении подписка уже существует
-    public UserSubscriptionDto addSubscriptionToUser(Long userId, SubscriptionDto subscriptionReq) {
-        log.info("User c id: {} добавление подписки {}", String.valueOf(userId), subscriptionReq.getName() );
-        UserEntity user = getUser(userId);
+    @Transactional
+    public UserAndSubscriptionDto addSubscriptionToUser(Long userId, SubscriptionDto subscriptionReq) {
+        log.info("User c id: {} добавление подписки {}", String.valueOf(userId), subscriptionReq.getName());
         String nameSubscription = subscriptionReq.getName();
-        try {
-            SubscriptionEntity subscription = getSubscription(nameSubscription);
+        UserEntity user = getUser(userId); //TODO переопределить equals и haschcode
+        SubscriptionEntity subscription = subscriptionRepository.findByName(nameSubscription)
+                .orElseGet(() -> createSubscriptionEntity(nameSubscription));
+        if (user.getSubscriptions().contains(subscription)) {
+            log.info("У пользователя с id: {} уже есть подписка: {}", user.getId(), subscription.getName());
+        } else {
             user.getSubscriptions().add(subscription);
-        } catch (NoSuchElementException ex) {
-            SubscriptionEntity newSubscription = createSubscriptionEntity(nameSubscription);
-            user.getSubscriptions().add(newSubscription);
+            userRepository.save(user);
         }
-        userRepository.save(user);
-        return new UserSubscriptionDto(user.getUsername(), nameSubscription); // TODO поменять на mapstruct
+        log.info("Пользователю с id: {} добавлена подписка: {} ", String.valueOf(userId), nameSubscription);
+        return new UserAndSubscriptionDto(user.getUsername(), nameSubscription);
     }
 
-    public List<UserSubscriptionDto> getAllSubscriptionsByUser(Long userId) {
+    public List<UserAndSubscriptionDto> getAllSubscriptionsByUser(Long userId) {
         log.info("Просмотр подписок user_id: {} ", String.valueOf(userId));
         UserEntity user = getUser(userId);
-        Set<SubscriptionEntity> subscription = user.getSubscriptions();
-        return subscription.stream().map(
-                subscript -> new UserSubscriptionDto(user.getUsername(), subscript.getName()) // TODO поменять на mapstruct
+        Set<SubscriptionEntity> subscriptions = user.getSubscriptions();
+        return subscriptions.stream().map(
+                subscript -> new UserAndSubscriptionDto(user.getUsername(), subscript.getName())
         ).collect(Collectors.toList());
     }
 
@@ -106,7 +109,7 @@ public class SubscriptionService {
     }
 
     public List<SubscriptionDto> getTopSubscriptions() {
-        log.info("Топ 3 подписок");
+        log.info("Просмотр Топ 3 подписок");
         List<SubscriptionEntity> top3subscriptions = subscriptionRepository.top3subscription();
         List<SubscriptionDto> listSubscription = top3subscriptions.stream()
                 .map(subscription -> new SubscriptionDto(subscription.getName()))

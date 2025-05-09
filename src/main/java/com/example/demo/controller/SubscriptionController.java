@@ -1,7 +1,7 @@
 package com.example.demo.controller;
 
 import com.example.demo.dto.SubscriptionDto;
-import com.example.demo.dto.UserSubscriptionDto;
+import com.example.demo.dto.UserAndSubscriptionDto;
 import com.example.demo.service.SubscriptionService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
@@ -15,7 +15,7 @@ import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
-@RequestMapping("api/v1/subscriptions")   // TODO ВЕРНУТЬ HTTP status
+@RequestMapping("api/v1/subscriptions")
 public class SubscriptionController {
     private final SubscriptionService subscriptionService;
 
@@ -32,17 +32,17 @@ public class SubscriptionController {
     }
 
     @PostMapping("/users/{id}")
-    public ResponseEntity<UserSubscriptionDto> addSubscriptionToUser(
+    public ResponseEntity<UserAndSubscriptionDto> addSubscriptionToUser(
             @PathVariable("id") Long userId,
             @RequestBody SubscriptionDto subscription) {
-        UserSubscriptionDto sub = subscriptionService.addSubscriptionToUser(userId, subscription);
+        UserAndSubscriptionDto sub = subscriptionService.addSubscriptionToUser(userId, subscription);
         return ResponseEntity.ok().body(sub);
     }
 
     @GetMapping("/users/{id}")
-    public ResponseEntity<List<UserSubscriptionDto>> getAllSubscriptionsUser(
-            @PathVariable("id") Long userId) { //TODO переделать одно имя и лист подписок
-        List<UserSubscriptionDto> listSubscription = subscriptionService.getAllSubscriptionsByUser(userId);
+    public ResponseEntity<List<UserAndSubscriptionDto>> getAllSubscriptionsUser(
+            @PathVariable("id") Long userId) {
+        List<UserAndSubscriptionDto> listSubscription = subscriptionService.getAllSubscriptionsByUser(userId);
         return ResponseEntity.ok().body(listSubscription);
     }
 
@@ -50,7 +50,7 @@ public class SubscriptionController {
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteSubscriptionsByUser(
             @PathVariable("id") Long userId,
-            @PathVariable("sub_id") Long subId) {  //
+            @PathVariable("sub_id") Long subId) {
         try {
             subscriptionService.deleteSubscriptionsByUser(userId, subId);
         } catch (IllegalArgumentException exep) {
