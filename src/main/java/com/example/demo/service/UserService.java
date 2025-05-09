@@ -22,11 +22,11 @@ public class UserService {
 
     @Transactional
     public UserCreateDto createUser(UserDto newUser) {
-        log.info("Создание пользователя с именем {}", newUser.getUsername());
+        log.debug("Создание пользователя с именем {}", newUser.getUsername());
         UserEntity user = new UserEntity();
         user.setUsername(newUser.getUsername());
         UserEntity saveUser = userRepository.save(user);
-        log.info("Пользователь создан: {}", saveUser.getUsername());
+        log.debug("Пользователь создан: {}", saveUser.getUsername());
         UserCreateDto userDto = new UserCreateDto();
         userDto.setUsername(saveUser.getUsername());
         userDto.setId(saveUser.getId());
@@ -45,6 +45,7 @@ public class UserService {
         Set<SubscriptionDto> subscriptions = user.getSubscriptions().stream()
                 .map(subscriptionEntity -> new SubscriptionDto(subscriptionEntity.getName())).collect(Collectors.toSet());
         userInfoDto.setSubscriptions(subscriptions);
+        log.debug("Информация о пользователе с id: {}", userId);
         return userInfoDto;
     }
     @Transactional
@@ -52,6 +53,7 @@ public class UserService {
         UserEntity user = getUser(userId);
         user.setUsername(userUpdateDate.getUsername());
         UserEntity userWithUpdateDate = userRepository.save(user);
+        log.info("Данные пользователя обновлены {}", userId);
         UserDto userDto = new UserDto();
         userDto.setUsername(userWithUpdateDate.getUsername());
         return userDto;
@@ -61,5 +63,6 @@ public class UserService {
     public void deleteUser(Long userId) {
         UserEntity user = getUser(userId);
         userRepository.delete(user);
+        log.info("Пользователь с {} удален", userId);
     }
 }

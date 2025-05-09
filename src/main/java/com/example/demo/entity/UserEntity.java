@@ -19,7 +19,7 @@ public class UserEntity {
     private Long id;
     @Column(nullable = false, length = 50)
     @NotBlank(message = "Имя пользователя не может быть пустым")
-    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Имя пользователя может состоять только буквы")
+    @Pattern(regexp = "^[a-zA-Z0-9_]+$", message = "Имя пользователя может состоять только из букв")
     private String username;
     @ManyToMany
     @JoinTable(
